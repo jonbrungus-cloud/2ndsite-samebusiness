@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sarayu.ae — The Connectivity Cloud</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --obsidian: #020202;
+    --cf-orange: #f6821f;
+    --green: #30d158;
+    --red: #ff453a;
+    --purple: #bf5af2;
+    --glass-bg: rgba(255,255,255,0.02);
+    --glass-border: rgba(255,255,255,0.1);
+    --glass-highlight: rgba(255,255,255,0.05);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--obsidian);
+    color: #fff;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* ===== LOADER ===== */
+  #loader {
+    position: fixed; inset: 0; z-index: 1000;
+    background: var(--obsidian);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2rem; padding: 1.5rem;
+    transition: opacity 0.8s ease;
+  }
+  #loader.fade-out { opacity: 0; pointer-events: none; }
+  .loader-ring {
+    width: 80px; height: 80px; position: relative;
+  }
+  .loader-ring-circle {
+    width: 80px; height: 80px; border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: var(--cf-orange);
+    border-right-color: rgba(246,130,31,0.3);
+    border-bottom-color: rgba(246,130,31,0.3);
+    animation: spin 1s linear infinite;
+    position: absolute;
+  }
+  .loader-icon {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  }
+  .loader-icon-inner {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: rgba(246,130,31,0.1);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .loader-text { text-align: center; }
+  .loader-label {
+    color: var(--cf-orange); font-size: 10px; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 0.4em; animation: pulse 1.5s ease infinite;
+  }
+  .loader-sub {
+    color: rgba(255,255,255,0.2); font-size: 9px; text-transform: uppercase;
+    letter-spacing: 0.2em; max-width: 200px; line-height: 1.5; margin-top: 0.5rem;
+  }
+  .loader-version {
+    position: absolute; bottom: 3rem;
+    font-size: 8px; color: rgba(255,255,255,0.1);
+    text-transform: uppercase; letter-spacing: 0.5em;
+  }
+
+  /* ===== NAV ===== */
+  #nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    padding: 1.25rem; transition: all 0.5s;
+  }
+  .nav-inner {
+    max-width: 80rem; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: all 0.5s;
+  }
+  #nav.scrolled { padding: 0.75rem; }
+  #nav.scrolled .nav-inner {
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(48px);
+    border: 0.5px solid rgba(255,255,255,0.1);
+    padding: 0.75rem 1rem; border-radius: 1rem;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
+  .logo-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(246,130,31,0.1);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.3s;
+  }
+  .logo-icon:hover { background: rgba(246,130,31,0.2); }
+  .nav-logo span { font-size: 1.1rem; font-weight: 300; letter-spacing: -0.02em; }
+  .nav-links { display: none; align-items: center; gap: 2rem; }
+  @media (min-width: 768px) { .nav-links { display: flex; } }
+  .nav-links a, .nav-links button {
+    color: rgba(255,255,255,0.4); font-size: 0.875rem;
+    text-decoration: none; background: none; border: none;
+    cursor: pointer; transition: color 0.3s;
+  }
+  .nav-links a:hover, .nav-links button:hover { color: #fff; }
+  .nav-right { display: flex; align-items: center; gap: 1rem; }
+  .nav-status { display: none; align-items: center; gap: 0.5rem; }
+  @media (min-width: 640px) { .nav-status { display: flex; } }
+  .nav-status span { color: rgba(255,255,255,0.3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    position: relative; overflow: hidden; border-radius: 9999px;
+    font-size: 0.875rem; font-weight: 500; letter-spacing: 0.02em;
+    padding: 0.875rem 1.75rem; transition: all 0.3s; cursor: pointer;
+    border: none; white-space: nowrap; font-family: inherit;
+  }
+  .btn::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: translateX(-100%); transition: transform 0.6s;
+  }
+  .btn:hover::after { transform: translateX(100%); }
+  .btn-primary { background: #fff; color: var(--obsidian); }
+  .btn-primary:hover { box-shadow: 0 0 40px rgba(255,255,255,0.15); transform: translateY(-2px); }
+  .btn-secondary { background: transparent; color: #fff; border: 0.5px solid rgba(255,255,255,0.2); }
+  .btn-secondary:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.3); transform: translateY(-2px); }
+  .btn-ghost { background: transparent; color: rgba(255,255,255,0.7); padding: 0.625rem 1.25rem; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.05); color: #fff; }
+  .btn-sm { padding: 0.5rem 1rem; font-size: 0.8rem; }
+  .btn-orange { background: var(--cf-orange); color: #000; }
+  .btn-orange:hover { opacity: 0.9; transform: translateY(-2px); }
+  .btn-full { width: 100%; }
+
+  /* ===== STATUS DOTS ===== */
+  .dot-wrap { position: relative; display: flex; }
+  .dot-ping {
+    position: absolute; inset: 0; border-radius: 50%;
+    animation: ping 2s cubic-bezier(0,0,0.2,1) infinite; opacity: 0.75;
+  }
+  .dot-core { position: relative; width: 8px; height: 8px; border-radius: 50%; }
+  .dot-sm .dot-core, .dot-sm .dot-ping { width: 6px; height: 6px; }
+  .dot-green .dot-ping, .dot-green .dot-core { background: var(--green); }
+  .dot-orange .dot-ping, .dot-orange .dot-core { background: var(--cf-orange); }
+  .dot-red .dot-ping, .dot-red .dot-core { background: var(--red); }
+
+  /* ===== GLASS CARDS ===== */
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(40px) saturate(180%);
+    border: 0.5px solid var(--glass-border);
+    border-radius: 1.5rem; padding: 2rem;
+    transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+  .glass-hoverable:hover {
+    background: var(--glass-highlight);
+    border-color: rgba(255,255,255,0.15);
+    transform: translateY(-4px);
+  }
+
+  /* ===== HERO ===== */
+  #hero {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative; overflow: hidden; text-align: center; padding: 6rem 1.5rem 3rem;
+  }
+  .hero-bg { position: absolute; inset: 0; pointer-events: none; }
+  .hero-bg-base {
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, #020202, #030306, #020202);
+  }
+  .hero-grid {
+    position: absolute; inset: 0; opacity: 0.03;
+    background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 100px 100px;
+  }
+  .hero-orb {
+    position: absolute; border-radius: 50%; filter: blur(80px);
+    animation: orb-drift 20s ease-in-out infinite;
+  }
+  .hero-orb-1 {
+    width: 600px; height: 600px; top: 25%; left: 25%;
+    background: radial-gradient(circle, rgba(246,130,31,0.04), transparent);
+  }
+  .hero-orb-2 {
+    width: 800px; height: 800px; top: 50%; right: 25%;
+    background: radial-gradient(circle, rgba(255,255,255,0.02), transparent);
+    animation-delay: -5s;
+  }
+  .hero-content { position: relative; z-index: 10; max-width: 64rem; }
+  .hero-status-bar {
+    display: inline-flex; align-items: center; gap: 1rem;
+    margin-bottom: 3rem; padding: 0.625rem 1.25rem;
+    border-radius: 9999px; border: 0.5px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.02); backdrop-filter: blur(24px);
+  }
+  .hero-status-bar span { color: rgba(255,255,255,0.5); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; }
+  .hero-status-bar .divider { width: 1px; height: 1rem; background: rgba(255,255,255,0.1); }
+  .hero-status-bar .mono { font-family: 'JetBrains Mono', monospace; color: rgba(255,255,255,0.4); font-size: 10px; }
+  .hero-title {
+    font-size: clamp(4rem, 15vw, 12rem); font-weight: 200;
+    letter-spacing: -0.05em; line-height: 0.85; margin-bottom: 2rem;
+    animation: fade-up 1s ease-out;
+  }
+  .hero-subtitle {
+    font-size: clamp(1.25rem, 4vw, 2.25rem); font-weight: 200;
+    color: rgba(255,255,255,0.5); line-height: 1.4; margin-bottom: 3rem;
+  }
+  .hero-subtitle strong { color: rgba(255,255,255,0.7); font-weight: 300; }
+  .hero-ticker { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; margin-bottom: 4rem; }
+  .hero-ticker-label { color: rgba(255,255,255,0.2); font-size: 10px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; }
+  .hero-ticker-stats { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2rem; font-size: 0.875rem; }
+  .stat-item { display: flex; align-items: center; gap: 0.5rem; }
+  .stat-label { color: rgba(255,255,255,0.4); }
+  .stat-val { font-family: 'JetBrains Mono', monospace; color: rgba(255,255,255,0.8); }
+  .stat-divider { width: 1px; height: 1rem; background: rgba(255,255,255,0.1); }
+  .hero-ticker-note { font-size: 10px; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.2em; margin-top: 1rem; }
+  .hero-ctas { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 1rem; }
+  .hero-scroll {
+    position: absolute; bottom: 3rem; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0.75rem; opacity: 0.2;
+    animation: fade-up 0.5s ease-out 1.5s both;
+  }
+  .hero-scroll span { font-size: 10px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; }
+  .bounce { animation: bounce 1.5s infinite; }
+
+  /* ===== SECTIONS ===== */
+  .section { padding: 8rem 1.5rem; }
+  .max-w { max-width: 80rem; margin: 0 auto; }
+  .section-badge { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
+  .badge-icon {
+    width: 32px; height: 32px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .badge-label { font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; }
+  .section-title {
+    font-size: clamp(2.5rem, 6vw, 5rem); font-weight: 200;
+    letter-spacing: -0.04em; line-height: 1; margin-bottom: 1.5rem;
+  }
+  .section-title .muted { color: rgba(255,255,255,0.3); }
+  .section-desc { font-size: 1.125rem; color: rgba(255,255,255,0.4); line-height: 1.6; max-width: 48rem; margin-bottom: 6rem; }
+
+  /* ===== THREAT MONITOR ===== */
+  .threat-hud { position: relative; overflow: hidden; }
+  .threat-grid-overlay {
+    position: absolute; inset: 0; opacity: 0.4; pointer-events: none;
+    background-image: linear-gradient(rgba(246,130,31,0.02) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(246,130,31,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: grid-scan 3s linear infinite;
+  }
+  .threat-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; }
+  .threat-header-left { display: flex; align-items: center; gap: 1rem; }
+  .threat-icon { width: 48px; height: 48px; border-radius: 12px; background: rgba(246,130,31,0.1); display: flex; align-items: center; justify-content: center; }
+  .threat-header-right { display: flex; align-items: center; gap: 1rem; }
+  .live-badge { display: flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.75rem; border-radius: 9999px; background: rgba(48,209,88,0.1); }
+  .live-badge span { color: var(--green); font-size: 12px; font-weight: 600; }
+  .utc-time { color: rgba(255,255,255,0.2); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .col-heads {
+    display: none; gap: 1rem; padding-bottom: 0.75rem;
+    font-size: 10px; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700;
+    border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 0.5rem;
+  }
+  @media (min-width: 768px) { .col-heads { display: grid; grid-template-columns: 2fr 2fr 2fr 2fr 1fr 1fr 2fr; } }
+  .log-container { position: relative; max-height: 400px; overflow: hidden; }
+  .log-entries { display: flex; flex-direction: column; gap: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .log-entry {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;
+    padding: 0.75rem; border-radius: 0.5rem;
+    background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03);
+    align-items: center; cursor: default; transition: background 0.3s;
+    animation: log-appear 0.3s ease-out;
+  }
+  @media (min-width: 768px) { .log-entry { grid-template-columns: 2fr 2fr 2fr 2fr 1fr 1fr 2fr; gap: 1rem; } }
+  .log-entry:hover { background: rgba(255,255,255,0.02); }
+  .log-ts { color: rgba(255,255,255,0.4); }
+  .log-type-BLOCKED { color: var(--red); font-weight: 700; }
+  .log-type-MITIGATED { color: var(--cf-orange); font-weight: 700; }
+  .log-type-ANALYZED { color: var(--green); font-weight: 700; }
+  .log-type-QUARANTINED { color: var(--purple); font-weight: 700; }
+  .log-vector { color: rgba(255,255,255,0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; grid-column: span 2; }
+  @media (min-width: 768px) { .log-vector { grid-column: span 1; } }
+  .log-source, .log-region { color: rgba(255,255,255,0.3); display: none; }
+  @media (min-width: 768px) { .log-source, .log-region { display: block; } }
+  .sev-badge { padding: 2px 6px; border-radius: 3px; font-size: 8px; font-weight: 700; display: none; }
+  @media (min-width: 768px) { .sev-badge { display: inline-block; } }
+  .sev-CRITICAL { background: rgba(255,69,58,0.2); color: var(--red); animation: pulse 1s infinite; }
+  .sev-HIGH { background: rgba(255,69,58,0.1); color: var(--red); }
+  .sev-MEDIUM { background: rgba(246,130,31,0.1); color: var(--cf-orange); }
+  .sev-LOW { background: rgba(48,209,88,0.1); color: var(--green); }
+  .log-packets { color: rgba(255,255,255,0.5); text-align: right; display: none; }
+  @media (min-width: 768px) { .log-packets { display: block; } }
+  .log-fade { position: absolute; bottom: 0; left: 0; right: 0; height: 6rem; background: linear-gradient(to top, rgba(2,2,2,0.95), transparent); pointer-events: none; }
+  .threat-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); font-size: 10px; }
+  .threat-legend { display: flex; align-items: center; gap: 1.5rem; }
+  .legend-item { display: flex; align-items: center; gap: 0.5rem; color: rgba(255,255,255,0.3); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .threat-powered { color: rgba(255,255,255,0.2); font-family: 'JetBrains Mono', monospace; display: none; }
+  @media (min-width: 640px) { .threat-powered { display: block; } }
+
+  /* ===== RESILIENCE ===== */
+  #resilience { position: relative; overflow: hidden; }
+  .resilience-accent {
+    position: absolute; top: 50%; left: 0;
+    width: 600px; height: 600px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(48,209,88,0.03), transparent);
+    filter: blur(60px); transform: translateY(-50%); pointer-events: none;
+  }
+  .resilience-grid { display: grid; gap: 5rem; }
+  @media (min-width: 1024px) { .resilience-grid { grid-template-columns: 1fr 1fr; } }
+  .sticky-panel { }
+  @media (min-width: 1024px) { .sticky-panel { position: sticky; top: 8rem; height: fit-content; } }
+  .metrics-list { display: flex; flex-direction: column; gap: 1rem; }
+  .metric-card { display: flex; align-items: center; gap: 1.5rem; }
+  .metric-icon { width: 56px; height: 56px; border-radius: 12px; background: rgba(48,209,88,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .metric-body { flex: 1; }
+  .metric-label { color: rgba(255,255,255,0.5); font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 4px; }
+  .metric-val { font-size: 1.5rem; font-weight: 300; }
+  .metric-desc { color: rgba(255,255,255,0.2); font-size: 10px; margin-top: 2px; }
+  .metric-pill { padding: 4px 12px; border-radius: 9999px; background: rgba(48,209,88,0.1); color: var(--green); font-size: 9px; font-weight: 700; letter-spacing: 0.15em; flex-shrink: 0; transition: background 0.3s; }
+  .metric-card:hover .metric-pill { background: rgba(48,209,88,0.2); }
+  .metrics-note { font-size: 10px; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.2em; margin-top: 1rem; text-align: right; }
+  .resilience-btns { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 3rem; }
+
+  /* ===== UPTIME ===== */
+  .uptime-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem; margin-bottom: 2rem; }
+  .uptime-pct { font-size: 2.5rem; font-weight: 200; color: var(--green); line-height: 1; font-family: 'JetBrains Mono', monospace; }
+  .uptime-period { color: rgba(255,255,255,0.3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; margin-top: 0.5rem; }
+  .uptime-bars { display: flex; gap: 2px; height: 48px; align-items: flex-end; }
+  .uptime-bar { flex: 1; height: 100%; border-radius: 3px; cursor: pointer; transform-origin: bottom; transition: background 0.2s; }
+  .uptime-bar.operational { background: rgba(48,209,88,0.5); }
+  .uptime-bar.operational:hover { background: rgba(48,209,88,0.7); }
+  .uptime-bar.maintenance { background: rgba(246,130,31,0.5); }
+  .uptime-bar.maintenance:hover { background: rgba(246,130,31,0.7); }
+  .uptime-bar.down { background: rgba(255,69,58,0.5); }
+  .uptime-bar.down:hover { background: rgba(255,69,58,0.7); }
+  .uptime-legend { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); font-size: 10px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.15em; }
+  .uptime-legend-item { display: flex; align-items: center; gap: 0.5rem; color: rgba(255,255,255,0.4); }
+  .uptime-legend-color { width: 12px; height: 12px; border-radius: 2px; }
+
+  /* ===== EDGE NODES ===== */
+  .edge-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .edge-header-left { display: flex; align-items: center; gap: 0.75rem; }
+  .edge-header-left span { font-size: 1rem; font-weight: 500; }
+  .edge-count { color: rgba(255,255,255,0.3); font-size: 12px; }
+  .edge-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+  @media (min-width: 768px) { .edge-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1024px) { .edge-grid { grid-template-columns: repeat(6, 1fr); } }
+  .edge-node {
+    padding: 1rem; border-radius: 12px;
+    background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+    transition: border-color 0.3s;
+  }
+  .edge-node:hover { border-color: rgba(255,255,255,0.1); }
+  .edge-node-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+  .edge-id { color: rgba(255,255,255,0.6); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+  .edge-location { font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .edge-stats { display: flex; align-items: center; justify-content: space-between; font-size: 10px; color: rgba(255,255,255,0.3); }
+
+  /* ===== MARKETPLACE ===== */
+  .auction-table { overflow-x: auto; }
+  .mktable { width: 100%; text-align: left; border-collapse: collapse; min-width: 800px; }
+  .mktable thead th { padding: 0 1rem 1.5rem; font-size: 10px; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .mktable tbody tr { border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.3s; }
+  .mktable tbody tr.available { cursor: pointer; }
+  .mktable tbody tr.available:hover { background: rgba(255,255,255,0.02); }
+  .mktable tbody tr.unavailable { opacity: 0.7; cursor: not-allowed; }
+  .mktable td { padding: 2rem 1rem; vertical-align: middle; }
+  .domain-cell { display: flex; align-items: center; gap: 1rem; }
+  .domain-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.3s; }
+  tr.available:hover .domain-icon { background: rgba(255,255,255,0.1); }
+  .domain-name { font-weight: 500; margin-bottom: 4px; }
+  .domain-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+  .domain-tag { font-size: 8px; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 3px; color: rgba(255,255,255,0.3); text-transform: uppercase; font-weight: 900; letter-spacing: 0.1em; }
+  .domain-price { font-size: 1.25rem; font-weight: 300; }
+  .domain-price span { color: rgba(255,255,255,0.2); font-size: 12px; margin-left: 4px; }
+  .domain-status { color: rgba(255,255,255,0.5); font-size: 0.875rem; }
+  .domain-cluster { color: var(--purple); font-size: 0.875rem; }
+  .status-pill { display: inline-flex; align-items: center; gap: 0.5rem; padding: 6px 12px; border-radius: 9999px; }
+  .pill-open { background: rgba(48,209,88,0.1); }
+  .pill-open .pip { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 1.5s infinite; }
+  .pill-open span { color: var(--green); font-size: 9px; font-weight: 700; }
+  .pill-review { background: rgba(246,130,31,0.05); border: 1px solid rgba(246,130,31,0.1); display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 9999px; }
+  .pill-review .pip { width: 6px; height: 6px; border-radius: 50%; background: rgba(246,130,31,0.4); animation: pulse 1.5s infinite; }
+  .pill-review span { color: rgba(246,130,31,0.6); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+  .pill-sold { background: rgba(255,69,58,0.05); border: 1px solid rgba(255,69,58,0.1); color: rgba(255,69,58,0.6); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 6px 12px; border-radius: 9999px; display: inline-block; }
+  .pill-banned, .pill-generic { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); color: rgba(255,255,255,0.2); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 6px 12px; border-radius: 9999px; display: inline-block; }
+  .action-wrap { display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem; }
+  .marketplace-cta { margin-top: 3rem; text-align: center; }
+  .marketplace-cta p { color: rgba(255,255,255,0.2); font-size: 0.875rem; margin-bottom: 1.5rem; }
+
+  /* ===== FOOTER ===== */
+  footer { padding: 6rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); }
+  .footer-grid { display: grid; grid-template-columns: 1fr; gap: 3rem; margin-bottom: 4rem; justify-items: center; }
+  @media (min-width: 768px) { .footer-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .footer-grid { grid-template-columns: repeat(4, 1fr); } }
+  .footer-brand { display: flex; flex-direction: column; align-items: center; max-width: 18rem; }
+  .footer-logo { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
+  .footer-logo span { font-size: 1.25rem; font-weight: 300; }
+  .footer-desc { color: rgba(255,255,255,0.3); font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.5rem; text-align: center; }
+  .footer-socials { display: flex; gap: 0.75rem; }
+  .footer-social { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.4); transition: all 0.3s; }
+  .footer-social:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .footer-col { display: flex; flex-direction: column; align-items: center; }
+  .footer-col h4 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: rgba(255,255,255,0.5); margin-bottom: 1.5rem; }
+  .footer-col a, .footer-col button { color: rgba(255,255,255,0.4); font-size: 0.875rem; text-decoration: none; background: none; border: none; cursor: pointer; font-family: inherit; transition: color 0.3s; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+  .footer-col a:hover, .footer-col button:hover { color: #fff; }
+  .footer-bottom { padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; align-items: center; gap: 1rem; color: rgba(255,255,255,0.2); font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; }
+  .footer-bottom-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: center; }
+  .footer-bottom-sep { opacity: 0.4; }
+  .footer-status { display: flex; align-items: center; gap: 0.5rem; }
+
+  /* ===== MODALS ===== */
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    padding: 1.5rem; background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(16px); opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .modal-backdrop.open { opacity: 1; pointer-events: all; }
+  .modal-card {
+    width: 100%; background: rgba(12,12,16,0.97);
+    backdrop-filter: blur(60px) saturate(180%);
+    border: 0.5px solid rgba(255,255,255,0.14);
+    border-radius: 1.5rem; padding: 2.5rem;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+    transform: scale(0.95) translateY(20px);
+    transition: transform 0.3s, opacity 0.3s;
+    position: relative;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-backdrop.open .modal-card { transform: scale(1) translateY(0); }
+  .modal-close {
+    position: absolute; top: 1.5rem; right: 1.5rem;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(255,255,255,0.05); border: none;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.4); cursor: pointer; transition: all 0.3s;
+  }
+  .modal-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .modal-sm { max-width: 28rem; }
+  .modal-md { max-width: 32rem; }
+  .modal-lg { max-width: 42rem; }
+  .modal-xl { max-width: 56rem; }
+  .modal-icon { width: 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; }
+  .modal-title { font-size: 1.5rem; font-weight: 300; margin-bottom: 0.5rem; }
+  .modal-subtitle { color: rgba(255,255,255,0.4); font-size: 0.875rem; margin-bottom: 2rem; }
+
+  /* ===== INPUTS ===== */
+  .premium-input {
+    width: 100%; padding: 0.875rem 1rem; border-radius: 0.75rem;
+    background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.1);
+    color: #fff; font-family: inherit; font-size: 0.875rem;
+    transition: all 0.3s; outline: none;
+  }
+  .premium-input:focus { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); box-shadow: 0 0 0 4px rgba(255,255,255,0.05); }
+  .premium-input::placeholder { color: rgba(255,255,255,0.2); }
+  .form-label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: rgba(255,255,255,0.3); margin-bottom: 0.5rem; }
+  .form-group { margin-bottom: 1rem; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .input-wrap { position: relative; }
+  .input-wrap .prefix { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.2); pointer-events: none; font-size: 0.875rem; }
+  .input-wrap .suffix { position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.3); pointer-events: none; font-size: 0.875rem; font-weight: 500; }
+  .input-wrap .premium-input.with-prefix { padding-left: 4rem; }
+  .input-wrap .premium-input.with-suffix { padding-right: 6rem; }
+
+  /* ===== CHECKOUT / ORDER SUMMARY ===== */
+  .order-summary { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
+  .order-row { display: flex; justify-content: space-between; font-size: 0.875rem; margin-bottom: 0.75rem; }
+  .order-row .key { color: rgba(255,255,255,0.3); }
+  .order-row .val { font-family: 'JetBrains Mono', monospace; }
+  .order-row.mode .val { color: var(--green); font-weight: 700; }
+  .order-divider { height: 1px; background: rgba(255,255,255,0.05); margin: 0.75rem 0; }
+  .order-total { display: flex; justify-content: space-between; align-items: flex-end; }
+  .order-total .key { color: rgba(255,255,255,0.3); font-size: 11px; }
+  .order-total .val { font-size: 2rem; font-weight: 200; letter-spacing: -0.03em; }
+  .order-total .cur { font-size: 11px; color: rgba(255,255,255,0.2); margin-left: 4px; }
+
+  /* ===== SUCCESS STATE ===== */
+  .success-state { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 3rem 1.5rem; }
+  .success-icon { width: 80px; height: 80px; border-radius: 50%; background: rgba(48,209,88,0.1); display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; animation: pop-in 0.4s ease-out; }
+  .success-title { font-size: 2rem; font-weight: 300; margin-bottom: 1rem; }
+  .success-domain { color: #fff; font-weight: 500; }
+  .success-body { color: rgba(255,255,255,0.6); line-height: 1.6; max-width: 28rem; margin-bottom: 1rem; font-size: 1.1rem; font-weight: 300; }
+  .success-note { color: rgba(255,255,255,0.4); font-size: 0.875rem; line-height: 1.6; max-width: 20rem; margin-bottom: 3rem; }
+  .success-time { color: rgba(255,255,255,0.6); font-weight: 500; }
+
+  /* ===== DOCS MODAL ===== */
+  .docs-header { display: flex; align-items: center; justify-content: space-between; padding: 1.5rem 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .docs-header-left { display: flex; align-items: center; gap: 1rem; }
+  .docs-header-icon { width: 48px; height: 48px; border-radius: 10px; background: rgba(246,130,31,0.1); display: flex; align-items: center; justify-content: center; }
+  .docs-title { font-weight: 300; font-size: 1.25rem; }
+  .docs-subtitle { color: rgba(255,255,255,0.3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; margin-top: 2px; }
+  .docs-cmd { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; background: rgba(255,255,255,0.01); border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .docs-cmd-inner { display: flex; align-items: center; gap: 0.75rem; overflow: hidden; }
+  .docs-cmd-inner span { color: rgba(255,255,255,0.2); font-family: 'JetBrains Mono', monospace; }
+  .docs-cmd-inner code { color: var(--cf-orange); font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .docs-tabs { display: flex; gap: 2rem; padding: 0 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .docs-tab { padding-bottom: 1rem; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: inherit; color: rgba(255,255,255,0.3); transition: all 0.3s; }
+  .docs-tab.active { border-bottom-color: var(--cf-orange); color: #fff; }
+  .docs-content { padding: 2rem; max-height: 40vh; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
+  .docs-item { display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); }
+  .docs-item-key { font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; }
+  .docs-item-key .k { color: var(--green); }
+  .docs-item-key .eq { color: rgba(255,255,255,0.2); margin: 0 0.5rem; }
+  .docs-item-key .v { color: #fff; }
+  .docs-item-desc { font-size: 10px; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+  .docs-footer { display: flex; align-items: center; justify-content: space-between; padding: 1.5rem 2rem; background: rgba(255,255,255,0.01); border-top: 1px solid rgba(255,255,255,0.05); font-size: 10px; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.15em; }
+  .modal-xl.docs { padding: 0; }
+
+  /* ===== ADMIN ===== */
+  #admin-view { display: none; min-height: 100vh; background: #050505; padding: 2rem; }
+  #admin-view.visible { display: block; }
+  .admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3rem; }
+  .admin-header-left { display: flex; align-items: center; gap: 1rem; }
+  .admin-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(246,130,31,0.1); display: flex; align-items: center; justify-content: center; }
+  .admin-title { font-size: 1.5rem; font-weight: 300; }
+  .admin-subtitle { color: rgba(255,255,255,0.3); font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; margin-top: 4px; }
+  .admin-btns { display: flex; gap: 1rem; }
+  .admin-grid { display: grid; gap: 2rem; }
+  @media (min-width: 1024px) { .admin-grid { grid-template-columns: 2fr 1fr; } }
+  .admin-domain-row { display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); transition: border-color 0.3s; }
+  .admin-domain-row:hover { border-color: rgba(255,255,255,0.1); }
+  .admin-domain-name { font-size: 0.875rem; font-weight: 500; }
+  .admin-domain-status { font-size: 10px; color: rgba(255,255,255,0.2); text-transform: uppercase; margin-top: 2px; }
+  .admin-review-box { margin-top: 0.75rem; padding: 0.75rem; border-radius: 10px; background: rgba(246,130,31,0.05); border: 1px solid rgba(246,130,31,0.1); }
+  .admin-review-label { font-size: 9px; color: var(--cf-orange); font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 4px; }
+  .admin-review-name { font-size: 0.875rem; font-weight: 300; }
+  .admin-review-contact { font-size: 10px; color: rgba(255,255,255,0.4); font-family: 'JetBrains Mono', monospace; }
+  .admin-select { background: #000; border: 0.5px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 6px 12px; font-size: 12px; color: #fff; cursor: pointer; outline: none; font-family: inherit; }
+  .admin-select:focus { border-color: var(--cf-orange); }
+  .security-card { background: rgba(48,209,88,0.05); border: 1px solid rgba(48,209,88,0.1) !important; }
+  .security-card-icon { width: 32px; height: 32px; border-radius: 50%; background: rgba(48,209,88,0.2); display: flex; align-items: center; justify-content: center; color: var(--green); }
+  .security-card-label { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em; color: var(--green); }
+  .provision-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: rgba(255,255,255,0.3); display: block; margin-bottom: 0.5rem; }
+
+  /* ===== POLICY MODALS ===== */
+  .policy-header { display: flex; align-items: center; justify-content: space-between; padding: 1.5rem 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02); border-radius: 1.5rem 1.5rem 0 0; }
+  .policy-content { padding: 2rem; max-height: 60vh; overflow-y: auto; }
+  .policy-footer { padding: 1.5rem 2rem; background: rgba(255,255,255,0.01); border-top: 1px solid rgba(255,255,255,0.05); font-size: 10px; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.15em; text-align: center; border-radius: 0 0 1.5rem 1.5rem; }
+  .policy-section { margin-bottom: 2rem; }
+  .policy-h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 1rem; }
+  .policy-p { color: rgba(255,255,255,0.5); font-size: 0.875rem; line-height: 1.6; }
+  .policy-ul { color: rgba(255,255,255,0.4); font-size: 0.875rem; padding-left: 1.5rem; }
+  .policy-ul li { margin-bottom: 0.5rem; line-height: 1.6; }
+  .policy-data-row { display: flex; justify-content: space-between; font-size: 12px; padding: 0.5rem 0; }
+  .policy-data-key { color: rgba(255,255,255,0.2); }
+  .policy-data-val { color: rgba(255,255,255,0.6); }
+  .policy-note { border-left: 2px solid rgba(255,255,255,0.1); padding-left: 1rem; color: rgba(255,255,255,0.3); font-size: 10px; font-style: italic; margin-top: 1rem; line-height: 1.5; }
+  .policy-warning { color: rgba(255,69,58,0.6); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 1rem; }
+  .policy-code { padding: 1rem; border-radius: 10px; background: rgba(255,69,58,0.05); border: 1px solid rgba(255,69,58,0.1); }
+  .policy-code div { color: rgba(255,69,58,0.6); font-family: 'JetBrains Mono', monospace; font-size: 11px; margin-bottom: 4px; }
+  .policy-list-item { display: flex; gap: 0.75rem; margin-bottom: 0.75rem; }
+  .policy-list-item strong { color: rgba(255,255,255,0.6); }
+
+  /* ===== CONTACT MODAL ===== */
+  .contact-icon { width: 64px; height: 64px; border-radius: 50%; background: rgba(246,130,31,0.1); display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; color: var(--cf-orange); }
+  .contact-email-wrap { padding: 1rem; border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); width: 100%; }
+  .contact-email-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--cf-orange); font-weight: 700; margin-bottom: 4px; }
+  .contact-email a { font-size: 1.1rem; font-weight: 300; color: #fff; text-decoration: none; display: block; text-align: center; transition: color 0.3s; }
+  .contact-email a:hover { color: var(--cf-orange); }
+  .contact-return { margin-top: 2rem; color: rgba(255,255,255,0.3); font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700; background: none; border: none; cursor: pointer; font-family: inherit; transition: color 0.3s; }
+  .contact-return:hover { color: #fff; }
+
+  /* ===== INCIDENT / COOKIE EMPTY ===== */
+  .empty-state { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 4rem 1.5rem; }
+  .empty-icon { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; }
+  .empty-title { font-size: 1.25rem; font-weight: 300; margin-bottom: 1rem; }
+  .empty-body { color: rgba(255,255,255,0.4); font-size: 0.875rem; line-height: 1.6; max-width: 20rem; }
+
+  /* ===== LOGIN MODAL ===== */
+  .login-title { font-size: 1.25rem; font-weight: 300; text-align: center; margin-bottom: 0.5rem; }
+  .login-sub { color: rgba(255,255,255,0.3); font-size: 9px; text-transform: uppercase; letter-spacing: 0.2em; text-align: center; margin-bottom: 2rem; }
+  .login-error { color: var(--red); font-size: 10px; font-weight: 700; text-transform: uppercase; text-align: center; margin-top: 0.5rem; }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  @keyframes ping { 75%,100% { transform: scale(2); opacity: 0; } }
+  @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  @keyframes orb-drift {
+    0%,100% { transform: translate(0,0) scale(1); }
+    25% { transform: translate(3%,-2%) scale(1.05); }
+    50% { transform: translate(-2%,3%) scale(0.95); }
+    75% { transform: translate(-3%,-2%) scale(1.02); }
+  }
+  @keyframes fade-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes grid-scan { from { background-position: 0 0; } to { background-position: 0 40px; } }
+  @keyframes log-appear { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes pop-in { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* ===== UTILITY ===== */
+  .hidden { display: none; }
+  .text-orange { color: var(--cf-orange); }
+  .text-green { color: var(--green); }
+  .text-purple { color: var(--purple); }
+  .text-red { color: var(--red); }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+  .section-inner { max-width: 80rem; margin: 0 auto; position: relative; }
+</style>
+</head>
+<body>
+
+<!-- ===== LOADER ===== -->
+<div id="loader">
+  <div class="loader-ring">
+    <div class="loader-ring-circle"></div>
+    <div class="loader-icon">
+      <div class="loader-icon-inner">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f6821f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+    </div>
+  </div>
+  <div class="loader-text">
+    <div class="loader-label">Core Initialization</div>
+    <div class="loader-sub">Fetching Inventory from Cloudspread Registry</div>
+  </div>
+  <div class="loader-version">Sarayu Infrastructure SRE-v0.1</div>
+</div>
+
+<!-- ===== MAIN SITE ===== -->
+<div id="site" style="display:none;">
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f6821f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+      <span>Sarayu</span>
+    </a>
+    <div class="nav-links">
+      <a href="#infrastructure">Infrastructure</a>
+      <a href="#resilience">SLA</a>
+      <a href="#marketplace">Marketplace</a>
+      <button onclick="handleAdminClick()">Admin</button>
+    </div>
+    <div class="nav-right">
+      <div class="nav-status">
+        <div class="dot-wrap dot-sm dot-green">
+          <div class="dot-ping"></div><div class="dot-core"></div>
+        </div>
+        <span>Online</span>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="openModal('contact-modal')">Contact Us</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg">
+    <div class="hero-bg-base"></div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-grid"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-status-bar">
+      <div class="dot-wrap dot-sm dot-green"><div class="dot-ping"></div><div class="dot-core"></div></div>
+      <span>Cloudflare Anycast Active</span>
+      <div class="divider"></div>
+      <span class="mono" id="req-counter">847,293,847 req/s</span>
+    </div>
+    <h1 class="hero-title">Sarayu.ae</h1>
+    <p class="hero-subtitle">The Connectivity Cloud.<br><strong>Orchestrated by SREs.</strong></p>
+    <div class="hero-ticker">
+      <span class="hero-ticker-label">Powered by Cloudflare Global Network</span>
+      <div class="hero-ticker-stats">
+        <div class="stat-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f6821f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span class="stat-label">Network Threats Blocked:</span>
+          <span class="stat-val" id="blocked-counter">12,847,293</span>
+        </div>
+        <div class="stat-divider" style="display:none;" id="stat-divider-1"></div>
+        <div class="stat-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span class="stat-label">Global Capacity:</span>
+          <span class="stat-val font-mono" id="bandwidth-counter">31.4 Tbps</span>
+        </div>
+      </div>
+      <div class="hero-ticker-note">All metrics provided by Cloudflare Intelligence Reports</div>
+    </div>
+    <div class="hero-ctas">
+      <button class="btn btn-primary" onclick="document.getElementById('marketplace').scrollIntoView({behavior:'smooth'})">
+        Request Subdomain
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+      <button class="btn btn-secondary" onclick="document.getElementById('infrastructure').scrollIntoView({behavior:'smooth'})">View Infrastructure</button>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <span>Explore</span>
+    <svg class="bounce" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+</section>
+
+<!-- INFRASTRUCTURE -->
+<section id="infrastructure" class="section">
+  <div class="section-inner">
+    <div class="section-badge">
+      <div class="badge-icon" style="background:rgba(246,130,31,0.1);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f6821f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <span class="badge-label text-orange">The Cloudflare Pivot</span>
+    </div>
+    <h2 class="section-title">Autonomous Defense<br><span class="muted">at <span id="infra-bw">31.4</span> Tbps.</span></h2>
+    <p class="section-desc">We don't build the wall; we orchestrate the edge. Leveraging Cloudflare's AI-mitigation engine to neutralize hyper-volumetric botnet strikes before they reach the first hop.</p>
+    <!-- Threat Monitor -->
+    <div class="glass-card threat-hud">
+      <div class="threat-grid-overlay"></div>
+      <div class="threat-header">
+        <div class="threat-header-left">
+          <div class="threat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f6821f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div>
+            <h3 style="font-weight:500;font-size:1.1rem;">Real-Time Threat Monitor</h3>
+            <p style="color:rgba(255,255,255,0.3);font-size:0.875rem;">Live AI-powered mitigation logs from 310+ edge nodes</p>
+          </div>
+        </div>
+        <div class="threat-header-right">
+          <div class="live-badge">
+            <div class="dot-wrap dot-sm dot-green"><div class="dot-ping"></div><div class="dot-core"></div></div>
+            <span>LIVE</span>
+          </div>
+          <span class="utc-time" id="utc-time"></span>
+        </div>
+      </div>
+      <div class="col-heads">
+        <div>Timestamp</div><div>Status</div><div>Vector</div><div>Source ASN</div><div>Region</div><div>Severity</div><div style="text-align:right;">Volume</div>
+      </div>
+      <div class="log-container">
+        <div class="log-entries" id="log-entries"></div>
+        <div class="log-fade"></div>
+      </div>
+      <div class="threat-footer">
+        <div class="threat-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--red);"></div>BLOCKED</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--cf-orange);"></div>MITIGATED</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--green);"></div>ANALYZED</div>
+        </div>
+        <span class="threat-powered">Powered by Cloudflare AI Gateway</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESILIENCE / SLA -->
+<section id="resilience" class="section">
+  <div class="resilience-accent"></div>
+  <div class="section-inner">
+    <div class="resilience-grid">
+      <div class="sticky-panel">
+        <div class="section-badge">
+          <div class="badge-icon" style="background:rgba(48,209,88,0.1);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <span class="badge-label text-green">The 100% Promise</span>
+        </div>
+        <h2 class="section-title">100% Uptime.<br><span class="muted">100% Integrity.</span></h2>
+        <p class="section-desc" style="margin-bottom:1.5rem;">We prioritize intentional maintenance over "fake" marketing stats. 100% means we secure zero-day RCEs in the markdown pipeline and prioritize hardware health.</p>
+        <div class="resilience-btns">
+          <button class="btn btn-secondary" onclick="openModal('sla-modal')">
+            View Full SLA
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+          <button class="btn btn-ghost" onclick="openModal('incident-modal')">Incident History</button>
+        </div>
+      </div>
+      <div>
+        <div class="metrics-list">
+          <div class="glass-card glass-hoverable metric-card">
+            <div class="metric-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+            <div class="metric-body">
+              <div class="metric-label">Zero-Day Response</div>
+              <div class="metric-val">&lt;4 hrs</div>
+              <div class="metric-desc">Critical patch deployment</div>
+            </div>
+            <div class="metric-pill">NOMINAL</div>
+          </div>
+          <div class="glass-card glass-hoverable metric-card">
+            <div class="metric-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+            </div>
+            <div class="metric-body">
+              <div class="metric-label">Hardware Health</div>
+              <div class="metric-val">100 %</div>
+              <div class="metric-desc">Active system monitoring</div>
+            </div>
+            <div class="metric-pill">NOMINAL</div>
+          </div>
+          <div class="glass-card glass-hoverable metric-card">
+            <div class="metric-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="metric-body">
+              <div class="metric-label">RCE Patches</div>
+              <div class="metric-val">Current</div>
+              <div class="metric-desc">Markdown pipeline secured</div>
+            </div>
+            <div class="metric-pill">NOMINAL</div>
+          </div>
+          <p class="metrics-note">Metrics synchronized with Cloudflare Operational Reports</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Uptime Chart -->
+    <div class="glass-card" style="margin-top:6rem;">
+      <div class="uptime-header">
+        <div>
+          <h3 style="font-size:1.1rem;font-weight:500;margin-bottom:4px;">90-Day Uptime Monitor</h3>
+          <p style="color:rgba(255,255,255,0.3);font-size:0.875rem;">Real-time availability tracking across all edge nodes</p>
+        </div>
+        <div style="text-align:right;">
+          <div class="uptime-pct">100%</div>
+          <div class="uptime-period">Current Quarter</div>
+        </div>
+      </div>
+      <div class="uptime-bars" id="uptime-bars"></div>
+      <div class="uptime-legend">
+        <div class="uptime-legend-item"><div class="uptime-legend-color" style="background:rgba(48,209,88,0.5);"></div>Operational (90 days)</div>
+        <div class="uptime-legend-item"><div class="uptime-legend-color" style="background:rgba(246,130,31,0.5);"></div>Maintenance (0 days)</div>
+        <div class="uptime-legend-item"><div class="uptime-legend-color" style="background:rgba(255,69,58,0.5);"></div>Incident (0 days)</div>
+      </div>
+    </div>
+
+    <!-- Edge Nodes -->
+    <div class="glass-card" style="margin-top:2rem;">
+      <div class="edge-header">
+        <div class="edge-header-left">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span>Edge Node Status</span>
+        </div>
+        <span class="edge-count">5/6 Online</span>
+      </div>
+      <div class="edge-grid" id="edge-grid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- MARKETPLACE -->
+<section id="marketplace" class="section">
+  <div class="section-inner">
+    <div class="section-badge">
+      <div class="badge-icon" style="background:rgba(191,90,242,0.1);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#bf5af2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </div>
+      <span class="badge-label text-purple">The Marketplace</span>
+    </div>
+    <h2 class="section-title">Premium Leases<br><span class="muted">&amp; Rapid Provisioning.</span></h2>
+    <p class="section-desc">Premium edge-proxied subdomains with dedicated resources. Each domain includes Cloudflare Spectrum tunneling, custom SSL, and priority support.</p>
+    <div class="glass-card auction-table" style="padding:2rem;">
+      <table class="mktable">
+        <thead>
+          <tr>
+            <th>Subdomain</th>
+            <th>Acquisition</th>
+            <th>Status</th>
+            <th>Node Cluster</th>
+            <th style="text-align:right;">Action</th>
+          </tr>
+        </thead>
+        <tbody id="domain-table-body"></tbody>
+      </table>
+    </div>
+    <div class="marketplace-cta">
+      <p>Don't see what you need? Request a custom subdomain.</p>
+      <button class="btn btn-primary" onclick="openModal('custom-modal')">
+        Request Custom Subdomain
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="max-w" style="max-width:80rem;margin:0 auto;">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="logo-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f6821f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <span>Sarayu.ae</span>
+        </div>
+        <p class="footer-desc">The Connectivity Cloud, orchestrated by SREs. Premium edge infrastructure for the UAE developer ecosystem.</p>
+        <div class="footer-socials">
+          <a href="#" class="footer-social">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </a>
+          <a href="#" class="footer-social">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53A4.48 4.48 0 0 0 22.43.36a9 9 0 0 1-2.88 1.1A4.52 4.52 0 0 0 16.11 0c-2.5 0-4.52 2.02-4.52 4.52 0 .35.04.7.11 1.03C7.69 5.37 4.07 3.58 1.64 0.8a4.52 4.52 0 0 0-.61 2.27c0 1.57.8 2.95 2.01 3.77a4.5 4.5 0 0 1-2.05-.57v.06c0 2.19 1.56 4.02 3.63 4.43a4.5 4.5 0 0 1-2.04.08c.57 1.79 2.24 3.09 4.21 3.12A9.06 9.06 0 0 1 0 19.54a12.77 12.77 0 0 0 6.92 2.03c8.3 0 12.85-6.88 12.85-12.85 0-.2 0-.39-.01-.58A9.17 9.17 0 0 0 23 3z"/></svg>
+          </a>
+          <a href="#" class="footer-social">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <button onclick="openModal('docs-modal')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Documentation
+        </button>
+        <a href="#">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Security Policy
+        </a>
+        <a href="#">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
+          Status Page
+        </a>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <button onclick="openModal('terms-modal')">Terms of Service</button>
+        <button onclick="openModal('privacy-modal')">Privacy Policy</button>
+        <button onclick="openModal('cookie-modal')">Cookie Policy</button>
+        <button onclick="openModal('aup-modal')">Acceptable Use</button>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-bottom-row">
+        <span>© 2026 Sarayu.ae</span>
+        <span class="footer-bottom-sep">|</span>
+        <span>Powered by Cloudflare</span>
+        <span class="footer-bottom-sep">|</span>
+        <span>Hardened on CachyOS</span>
+      </div>
+      <div class="footer-status">
+        <div class="dot-wrap dot-sm dot-green"><div class="dot-ping"></div><div class="dot-core"></div></div>
+        <span>All Systems Operational</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div><!-- /site -->
+
+<!-- ===== ADMIN VIEW ===== -->
+<div id="admin-view">
+  <div style="max-width:72rem;margin:0 auto;">
+    <div class="admin-header">
+      <div class="admin-header-left">
+        <div class="admin-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f6821f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div>
+          <div class="admin-title">Sarayu SRE Dashboard</div>
+          <div class="admin-subtitle">Infrastructure Management Node</div>
+        </div>
+      </div>
+      <div class="admin-btns">
+        <button class="btn btn-secondary btn-sm" onclick="goHome()">View Site</button>
+        <button class="btn btn-sm" style="background:rgba(255,69,58,0.1);color:var(--red);border:1px solid rgba(255,69,58,0.1);" onclick="adminLogout()">Logout</button>
+      </div>
+    </div>
+    <div class="admin-grid">
+      <div>
+        <div class="glass-card">
+          <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.4);margin-bottom:1.5rem;">Domain Inventory</h3>
+          <div style="display:flex;flex-direction:column;gap:1rem;" id="admin-domain-list"></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:1.5rem;">
+        <div class="glass-card">
+          <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.4);margin-bottom:1.5rem;">Provision New Subdomain</h3>
+          <div class="form-group">
+            <label class="provision-label">Subdomain Name</label>
+            <input type="text" class="premium-input" placeholder="e.g. staging" id="new-domain-input">
+          </div>
+          <button class="btn btn-orange btn-full" onclick="adminAddDomain()">Provision Link</button>
+        </div>
+        <div class="glass-card security-card">
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+            <div class="security-card-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="security-card-label">Security Status</div>
+          </div>
+          <p style="color:rgba(255,255,255,0.4);font-size:11px;line-height:1.6;">All admin operations are cross-verified against the Sharjah node blockchain.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- Domain / Buy Modal -->
+<div class="modal-backdrop" id="domain-modal" onclick="closeModalOnBackdrop(event,'domain-modal')">
+  <div class="modal-card modal-md" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('domain-modal')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="modal-icon" style="background:rgba(246,130,31,0.1);">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f6821f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+    </div>
+    <div class="modal-title" id="domain-modal-name">dev.sarayu.ae</div>
+    <div id="domain-modal-tags" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:2rem;"></div>
+    <div style="background:rgba(48,209,88,0.05);border:1px solid rgba(48,209,88,0.2);border-radius:12px;padding:1.5rem;margin-bottom:2rem;text-align:center;">
+      <div style="font-size:9px;font-weight:900;color:var(--green);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:4px;">Guaranteed Subdomain Ownership</div>
+      <div style="color:rgba(255,255,255,0.4);font-size:9px;">Valid for 3 months (36 AED per period)</div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="openCheckout()">
+      Purchase Now
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Custom Subdomain Modal -->
+<div class="modal-backdrop" id="custom-modal" onclick="closeModalOnBackdrop(event,'custom-modal')">
+  <div class="modal-card modal-md" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('custom-modal')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="modal-icon" style="background:rgba(191,90,242,0.1);">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#bf5af2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    </div>
+    <div class="modal-title">Request Custom Subdomain</div>
+    <div class="modal-subtitle">Enter your desired subdomain name to check availability.</div>
+    <div class="input-wrap" style="margin-bottom:2rem;">
+      <span class="prefix">https://</span>
+      <input type="text" class="premium-input with-prefix with-suffix" placeholder="your-project" id="custom-subdomain-input">
+      <span class="suffix">.sarayu.ae</span>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="proceedCustom()">Continue — 36 AED</button>
+  </div>
+</div>
+
+<!-- Checkout Modal -->
+<div class="modal-backdrop" id="checkout-modal" onclick="closeModalOnBackdrop(event,'checkout-modal')">
+  <div class="modal-card modal-lg" onclick="event.stopPropagation()">
+    <div id="checkout-form-view">
+      <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:3rem;">
+        <div class="modal-icon" style="background:rgba(48,209,88,0.1);margin-bottom:0;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        </div>
+        <div>
+          <div class="modal-title" style="margin-bottom:4px;">Complete Your Purchase</div>
+          <p style="color:rgba(255,255,255,0.4);font-size:0.875rem;">Secure your digital footprint on Sarayu</p>
+        </div>
+      </div>
+      <div class="order-summary">
+        <div class="order-row"><span class="key">Subdomain</span><span class="val font-mono" id="checkout-domain-name">—</span></div>
+        <div class="order-row mode"><span class="key">Mode</span><span class="val">Buy Now</span></div>
+        <div class="order-divider"></div>
+        <div class="order-total"><span class="key">Total Due</span><span class="val">36 <span class="cur">AED</span></span></div>
+      </div>
+      <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="premium-input" placeholder="John Doe" id="buyer-name"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Email</label><input type="email" class="premium-input" placeholder="john@example.com" id="buyer-email"></div>
+        <div class="form-group"><label class="form-label">Phone</label><input type="tel" class="premium-input" placeholder="+971 50 --- ----" id="buyer-phone"></div>
+      </div>
+      <div style="display:flex;gap:1rem;margin-top:1rem;">
+        <button class="btn btn-ghost" onclick="closeModal('checkout-modal')">Back</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="completeCheckout()">Complete Payment</button>
+      </div>
+    </div>
+    <div id="checkout-success-view" class="success-state" style="display:none;">
+      <div class="success-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="success-title">Allocation Initiated</div>
+      <p class="success-body">The allocation for <span class="success-domain" id="success-domain-name"></span> is now in progress.</p>
+      <p class="success-note">Once our SRE team verifies the transaction, your access credentials will be dispatched to your registered email. This process typically takes between <span class="success-time">2–12 hours</span> depending on network load and time of purchase.</p>
+      <button class="btn btn-secondary" onclick="closeCheckoutFull()">Return to Cloud</button>
+    </div>
+  </div>
+</div>
+
+<!-- Docs Modal -->
+<div class="modal-backdrop" id="docs-modal" onclick="closeModalOnBackdrop(event,'docs-modal')">
+  <div class="modal-card modal-xl docs" onclick="event.stopPropagation()">
+    <div class="docs-header">
+      <div class="docs-header-left">
+        <div class="docs-header-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f6821f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        </div>
+        <div>
+          <div class="docs-title">README.md</div>
+          <div class="docs-subtitle">Kernel Security Documentation</div>
+        </div>
+      </div>
+      <button class="modal-close" style="position:static;" onclick="closeModal('docs-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="docs-cmd">
+      <div class="docs-cmd-inner">
+        <span>$</span>
+        <code>curl -fsSL https://sarayu.ae/install.sh | sh</code>
+      </div>
+      <button style="padding:0.5rem;border-radius:8px;background:rgba(255,255,255,0.05);border:none;color:rgba(255,255,255,0.4);cursor:pointer;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>
+    </div>
+    <div class="docs-tabs">
+      <button class="docs-tab active" onclick="setDocsTab(0,this)">Security</button>
+      <button class="docs-tab" onclick="setDocsTab(1,this)">Network</button>
+      <button class="docs-tab" onclick="setDocsTab(2,this)">Memory</button>
+      <button class="docs-tab" onclick="setDocsTab(3,this)">Filesystem</button>
+    </div>
+    <div class="docs-content" id="docs-content"></div>
+    <div class="docs-footer">
+      <span>Last updated: April 2026 | Hardened by Sarayu SRE Team</span>
+      <button style="background:none;border:none;color:rgba(255,255,255,0.2);cursor:pointer;font-size:10px;font-family:inherit;display:flex;align-items:center;gap:0.5rem;text-transform:uppercase;letter-spacing:0.1em;transition:color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.2)'">
+        View on GitHub
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Terms Modal -->
+<div class="modal-backdrop" id="terms-modal" onclick="closeModalOnBackdrop(event,'terms-modal')">
+  <div class="modal-card modal-lg" style="padding:0;" onclick="event.stopPropagation()">
+    <div class="policy-header">
+      <h3 style="font-size:1.25rem;font-weight:300;text-transform:uppercase;letter-spacing:0.15em;">Terms of Service</h3>
+      <button class="modal-close" style="position:static;" onclick="closeModal('terms-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="policy-content">
+      <div class="policy-section">
+        <div class="policy-h4 text-orange">1. The "Non-Commercial Beta" Status</div>
+        <p class="policy-p">Sarayu Iron (v0.1) is a private, experimental research project. By using a subdomain or VM, you acknowledge that this is not a commercial service. There are no uptime guarantees, and the 'provider' (Me) can terminate any instance for maintenance without notice.</p>
+      </div>
+      <div class="policy-section">
+        <div class="policy-h4 text-orange">2. The "Hardware Protection" (SRE Clause)</div>
+        <p class="policy-p" style="margin-bottom:1rem;">Users are strictly prohibited from running:</p>
+        <ul class="policy-ul">
+          <li>Crypto-mining/Hashing (This will trigger an auto-kill of your PID).</li>
+          <li>Stress-testing/Benchmarking without written permission.</li>
+          <li>Heavy constant IO that degrades NVMe lifespan.</li>
+        </ul>
+      </div>
+      <div class="policy-section">
+        <div class="policy-h4 text-orange">3. The "12-Hour Micro-Blip" Rule</div>
+        <p class="policy-p">We follow the '12-Hour Threshold.' Any outage caused by ISP (Etisalat/du), Power (SEWA), or local hardware failure lasting less than 12 hours is considered 'Normal Operating Noise' and is not an incident.</p>
+      </div>
+      <div class="policy-section">
+        <div class="policy-h4 text-orange">4. The "Cybercrime Zero-Tolerance"</div>
+        <p class="policy-p" style="margin-bottom:1rem;">In accordance with UAE Federal Law No. 34 of 2021, any use of this infrastructure for:</p>
+        <ul class="policy-ul" style="margin-bottom:1rem;">
+          <li>Phishing/Scams</li>
+          <li>Spreading 'Rumors' or fake news</li>
+          <li>Accessing prohibited content</li>
+        </ul>
+        <div class="policy-warning">...will result in an immediate Permanent Ban and reporting to the relevant 'Cyber Pulse' initiatives.</div>
+      </div>
+    </div>
+    <div class="policy-footer">Sarayu Node Operations | Sharjah, UAE</div>
+  </div>
+</div>
+
+<!-- Privacy Modal -->
+<div class="modal-backdrop" id="privacy-modal" onclick="closeModalOnBackdrop(event,'privacy-modal')">
+  <div class="modal-card modal-lg" style="padding:0;" onclick="event.stopPropagation()">
+    <div class="policy-header">
+      <h3 style="font-size:1.25rem;font-weight:300;text-transform:uppercase;letter-spacing:0.15em;">Privacy Policy</h3>
+      <button class="modal-close" style="position:static;" onclick="closeModal('privacy-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="policy-content">
+      <div class="policy-section">
+        <div class="policy-h4 text-green">1. Data Minimization</div>
+        <p class="policy-p" style="margin-bottom:1rem;">We only collect what is mechanically necessary to keep the node running.</p>
+        <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:1rem;">
+          <div class="policy-data-row"><span class="policy-data-key">Identity Hash</span><span class="policy-data-val">UAE PASS Verified</span></div>
+          <div class="policy-data-row"><span class="policy-data-key">Access Log</span><span class="policy-data-val">Source IP Masked</span></div>
+          <div class="policy-data-row"><span class="policy-data-key">Purpose</span><span class="policy-data-val">Sybil Prevention</span></div>
+        </div>
+      </div>
+      <div class="policy-section">
+        <div class="policy-h4 text-green">2. Retention Policy (The "60-Day Log")</div>
+        <p class="policy-p" style="margin-bottom:1rem;">In accordance with local safety standards, we keep access logs for 60 days.</p>
+        <p class="policy-p"><strong style="color:rgba(255,255,255,0.6);">Auto-Purge:</strong> After 60 days, logs are automatically deleted from the NVMe storage.<br><strong style="color:rgba(255,255,255,0.6);">Exceptions:</strong> If a node is flagged for a Cybercrime violation, logs are frozen and preserved for legal review.</p>
+      </div>
+      <div class="policy-section">
+        <div class="policy-h4 text-green">3. Transparency & AI</div>
+        <p class="policy-p">We do not use your hosted data to train Large Language Models (LLMs). Your code and files are your private property. We only monitor resource usage (CPU/RAM/Network) to ensure the 5600G doesn't overheat or crash.</p>
+      </div>
+      <div class="policy-section">
+        <div class="policy-h4 text-green">4. The "Right to Erasure"</div>
+        <p class="policy-p" style="margin-bottom:1rem;">Users can request a total wipe of their data at any time. Once you delete your subdomain via the dashboard, our script will perform a shred operation on your directory, making the data unrecoverable.</p>
+        <div class="policy-note">SRE Note: Due to the nature of the blockchain-based logs used for UAE PASS authentication, the identity hash may remain in the system's ledger for audit purposes.</div>
+      </div>
+    </div>
+    <div class="policy-footer">Verified SRE Privacy Protocol | Sharjah Node</div>
+  </div>
+</div>
+
+<!-- AUP Modal -->
+<div class="modal-backdrop" id="aup-modal" onclick="closeModalOnBackdrop(event,'aup-modal')">
+  <div class="modal-card modal-lg" style="padding:0;" onclick="event.stopPropagation()">
+    <div class="policy-header">
+      <h3 style="font-size:1.25rem;font-weight:300;text-transform:uppercase;letter-spacing:0.15em;">Acceptable Use Policy</h3>
+      <button class="modal-close" style="position:static;" onclick="closeModal('aup-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="policy-content">
+      <div class="policy-section">
+        <div class="policy-h4 text-purple">1. Hardware & Performance Constraints</div>
+        <p class="policy-p" style="margin-bottom:1rem;">To ensure the stability of the "Sarayu Iron" node, the following activities are strictly prohibited:</p>
+        <div class="policy-list-item"><span style="color:var(--purple);font-weight:900;">/</span><p class="policy-p"><strong>Crypto-mining:</strong> No hashing, mining, or validation of any PoW or PoS protocols.</p></div>
+        <div class="policy-list-item"><span style="color:var(--purple);font-weight:900;">/</span><p class="policy-p"><strong>Stress Testing:</strong> No stress-ng, prime95, or intensive benchmarks pegging all cores for more than 60 seconds without prior SRE approval.</p></div>
+        <div class="policy-list-item"><span style="color:var(--purple);font-weight:900;">/</span><p class="policy-p"><strong>BitTorrent:</strong> No hosting of seedboxes or public trackers that cause high-frequency disk I/O.</p></div>
+      </div>
+      <div class="policy-section">
+        <div class="policy-h4 text-purple">2. Legal Compliance (UAE Federal Law)</div>
+        <div class="policy-list-item"><span style="color:rgba(255,255,255,0.2);">•</span><p class="policy-p"><strong>Public Morals:</strong> No hosting of gambling sites, pornographic material, or content that prejudices public morals.</p></div>
+        <div class="policy-list-item"><span style="color:rgba(255,255,255,0.2);">•</span><p class="policy-p"><strong>National Security:</strong> No publishing of information that threatens state security or public order.</p></div>
+        <div class="policy-list-item"><span style="color:rgba(255,255,255,0.2);">•</span><p class="policy-p"><strong>Privacy & Defamation:</strong> No "doxxing," spread of rumors, or fake news.</p></div>
+      </div>
+      <div class="policy-section">
+        <div class="policy-h4 text-purple">3. The "SRE Kill-Switch"</div>
+        <p class="policy-p" style="margin-bottom:1rem;">We monitor resource metrics in real-time. If your subdomain triggers a "Resource Spike," our automated watchdog will:</p>
+        <div class="policy-code">
+          <div>&gt; PROCESS_PAUSE();</div>
+          <div>&gt; ALERT_SRE("HIGH_USAGE_SENSORS");</div>
+          <div>&gt; REQUIRE_MANUAL_REVIEW();</div>
+        </div>
+      </div>
+    </div>
+    <div class="policy-footer">AUP Enforcement Level: CRITICAL | Sarayu Node</div>
+  </div>
+</div>
+
+<!-- SLA Modal -->
+<div class="modal-backdrop" id="sla-modal" onclick="closeModalOnBackdrop(event,'sla-modal')">
+  <div class="modal-card modal-lg" style="padding:0;" onclick="event.stopPropagation()">
+    <div class="policy-header">
+      <h3 style="font-size:1.25rem;font-weight:300;text-transform:uppercase;letter-spacing:0.15em;">Service Level Agreement</h3>
+      <button class="modal-close" style="position:static;" onclick="closeModal('sla-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="policy-content">
+      <div class="policy-section"><div class="policy-h4 text-green">1. Operational Availability</div><p class="policy-p">Sarayu targets 99.9% availability for the edge network layer. Outages under 12 hours caused by regional utilities or designated maintenance windows are considered 'Normal Operating Noise'.</p></div>
+      <div class="policy-section"><div class="policy-h4 text-green">2. Performance & Hardware Integrity</div><p class="policy-p">To maintain hardware health (NVMe lifespan and CPU stability), crypto-mining and unauthorized stress testing are strictly prohibited. The 'SRE Kill-Switch' may be deployed if resource usage threatens shared node stability.</p></div>
+      <div class="policy-section"><div class="policy-h4 text-green">3. Data Privacy & Sovereignty</div><p class="policy-p">We follow a Zero-Tracking philosophy. Access logs are purged every 60 days. We do not use hosted data to train AI/LLM models. All infrastructure resides within the UAE.</p></div>
+      <div class="policy-section"><div class="policy-h4 text-green">4. Compliance & Legal Status</div><p class="policy-p">This is a non-commercial beta service. All users must comply with UAE Federal Law No. 34 of 2021 regarding Cybercrime. Violation results in immediate revocation of service access.</p></div>
+    </div>
+    <div class="policy-footer">Sarayu Node SLA v1.0 | Sharjah Operational Center</div>
+  </div>
+</div>
+
+<!-- Incident Modal -->
+<div class="modal-backdrop" id="incident-modal" onclick="closeModalOnBackdrop(event,'incident-modal')">
+  <div class="modal-card modal-md" style="padding:0;" onclick="event.stopPropagation()">
+    <div class="policy-header">
+      <h3 style="font-size:1.25rem;font-weight:300;text-transform:uppercase;letter-spacing:0.15em;">Incident History</h3>
+      <button class="modal-close" style="position:static;" onclick="closeModal('incident-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="empty-state">
+      <div class="empty-icon" style="background:rgba(48,209,88,0.1);">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="empty-title">No incidents yet.</div>
+      <p class="empty-body">Sarayu Node has maintained 100% operational uptime for the current reporting period. All systems operating within nominal parameters.</p>
+    </div>
+    <div class="policy-footer">Reporting period: last 90 days</div>
+  </div>
+</div>
+
+<!-- Cookie Modal -->
+<div class="modal-backdrop" id="cookie-modal" onclick="closeModalOnBackdrop(event,'cookie-modal')">
+  <div class="modal-card modal-md" style="padding:0;" onclick="event.stopPropagation()">
+    <div class="policy-header">
+      <h3 style="font-size:1.25rem;font-weight:300;text-transform:uppercase;letter-spacing:0.15em;">Cookie Policy</h3>
+      <button class="modal-close" style="position:static;" onclick="closeModal('cookie-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="empty-state">
+      <div class="empty-icon" style="background:rgba(0,122,255,0.1);">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 12h.01"/></svg>
+      </div>
+      <div class="empty-title">We do not use any cookies.</div>
+      <p class="empty-body">Sarayu.ae is built with a zero-tracking philosophy. We do not use advertising, analytical, or functional cookies at any point on this domain.</p>
+    </div>
+    <div class="policy-footer">Verified Cookie-Free Experience</div>
+  </div>
+</div>
+
+<!-- Login Modal -->
+<div class="modal-backdrop" id="login-modal" onclick="closeModalOnBackdrop(event,'login-modal')">
+  <div class="modal-card modal-sm" onclick="event.stopPropagation()">
+    <div class="login-title">Admin Authentication</div>
+    <div class="login-sub">Access restricted to SRE personnel</div>
+    <div class="form-group"><label class="form-label">Identifier</label><input type="text" class="premium-input" placeholder="Admin Username" id="login-username"></div>
+    <div class="form-group"><label class="form-label">Access Key</label><input type="password" class="premium-input" placeholder="••••••••" id="login-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="login-error" id="login-error" style="display:none;"></div>
+    <button class="btn btn-orange btn-full" style="margin-top:1.5rem;" onclick="doLogin()">Verify Access Node</button>
+  </div>
+</div>
+
+<!-- Contact Modal -->
+<div class="modal-backdrop" id="contact-modal" onclick="closeModalOnBackdrop(event,'contact-modal')">
+  <div class="modal-card modal-sm" onclick="event.stopPropagation()">
+    <div style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+      <div class="contact-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      </div>
+      <h3 style="font-size:1.5rem;font-weight:300;margin-bottom:0.5rem;">Contact Support</h3>
+      <p style="color:rgba(255,255,255,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:2rem;">Official Communication Channel</p>
+      <div class="contact-email-wrap">
+        <div class="contact-email-label">Email Registry</div>
+        <div class="contact-email"><a href="mailto:customer_care@sarayu.ae">customer_care@sarayu.ae</a></div>
+      </div>
+      <button class="contact-return" onclick="closeModal('contact-modal')">Return to Node</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const DOMAIN_INVENTORY = [
+  { subdomain:"dev.sarayu.ae", price:36, statusText:"Available", nodeCluster:"AE-DXB-01", status:"AVAILABLE", features:["Wildcard SSL","10GB Bandwidth","Priority Support"] },
+  { subdomain:"api.sarayu.ae", price:36, statusText:"Available", nodeCluster:"AE-DXB-01", status:"AVAILABLE", features:["Dedicated IP","100GB Bandwidth","24/7 Support"] },
+  { subdomain:"lab.sarayu.ae", price:36, statusText:"Available", nodeCluster:"AE-DXB-02", status:"AVAILABLE", features:["SSL","5GB Bandwidth","Email Support"] },
+  { subdomain:"stage.sarayu.ae", price:36, statusText:"Available", nodeCluster:"AE-DXB-02", status:"AVAILABLE", features:["SSL","5GB Bandwidth","Email Support"] },
+  { subdomain:"prod.sarayu.ae", price:36, statusText:"Waiting for SRE Approval", nodeCluster:"AE-DXB-ENT", status:"PENDING", features:["Enterprise","Unlimited","Dedicated SRE"] },
+  { subdomain:"cdn.sarayu.ae", price:36, statusText:"Available", nodeCluster:"AE-DXB-01", status:"AVAILABLE", features:["Cloudflare Spectrum","50GB Bandwidth","Priority Support"] },
+];
+
+const EDGE_NODES = [
+  { id:"dxb-01", location:"Dubai, UAE", status:"ONLINE", latency:2.1, load:67 },
+  { id:"auh-01", location:"Abu Dhabi, UAE", status:"ONLINE", latency:3.4, load:52 },
+  { id:"fra-01", location:"Frankfurt, DE", status:"ONLINE", latency:45.2, load:78 },
+  { id:"sin-01", location:"Singapore, SG", status:"ONLINE", latency:89.1, load:61 },
+  { id:"lax-01", location:"Los Angeles, US", status:"DEGRADED", latency:156.3, load:92 },
+  { id:"lon-01", location:"London, UK", status:"ONLINE", latency:52.8, load:71 },
+];
+
+const ATTACK_VECTORS = ["SYN Flood","UDP Amplification","HTTP/2 Rapid Reset","DNS Query Flood","ICMP Flood","Slowloris","NTP Amplification","Memcached Reflection","SSDP Amplification","LDAP Reflection","Aisuru Botnet","TCP RST Attack","IP Fragmentation","Ping of Death","ACK Flood"];
+const ASN_SOURCES = ["AS174 Cogent","AS7018 AT&T","AS3356 Level3","AS1299 Telia","AS6939 Hurricane","AS2914 NTT","AS3257 GTT","AS6461 Zayo","AS9002 RETN","AS1239 Sprint","AS3491 PCCW","AS4134 Chinanet"];
+const REGIONS = ["EU-WEST","EU-NORTH","US-EAST","US-WEST","APAC-SOUTH","APAC-NORTH","ME-CENTRAL","AF-SOUTH","SA-EAST","OCE-WEST"];
+const LOG_TYPES = ["BLOCKED","MITIGATED","ANALYZED","QUARANTINED"];
+const SEVERITIES = ["LOW","MEDIUM","HIGH","CRITICAL"];
+
+const DOCS_DATA = [
+  [{k:"kernel.kptr_restrict",v:"2",d:"Hide kernel pointers from all users"},{k:"kernel.dmesg_restrict",v:"1",d:"Restrict dmesg to CAP_SYSLOG"},{k:"kernel.perf_event_paranoid",v:"3",d:"Disable perf events"}],
+  [{k:"net.ipv4.tcp_syncookies",v:"1",d:"Enable SYN flood protection"},{k:"net.ipv4.tcp_max_syn_backlog",v:"65535",d:"Max SYN queue length"}],
+  [{k:"kernel.randomize_va_space",v:"2",d:"Full ASLR enabled"},{k:"vm.mmap_min_addr",v:"65536",d:"Minimum mmap address"}],
+  [{k:"fs.protected_hardlinks",v:"1",d:"Hardlink protection"},{k:"fs.protected_symlinks",v:"1",d:"Symlink protection"}],
+];
+
+// ===== STATE =====
+let adminSubdomains = [...DOMAIN_INVENTORY.map(d => ({...d}))];
+let isAdminLoggedIn = false;
+let selectedSubdomain = null;
+let reqCounter = 847293847;
+let blockedCounter = 12847293;
+let bandwidth = 31.4;
+
+// ===== INIT =====
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    const loader = document.getElementById('loader');
+    loader.classList.add('fade-out');
+    setTimeout(() => {
+      loader.style.display = 'none';
+      document.getElementById('site').style.display = 'block';
+    }, 800);
+  }, 1200);
+
+  buildUptimeBars();
+  buildEdgeGrid();
+  buildDomainTable();
+  startTickers();
+  startThreatMonitor();
+  startClock();
+
+  window.addEventListener('scroll', () => {
+    const nav = document.getElementById('nav');
+    if (window.scrollY > 50) nav.classList.add('scrolled');
+    else nav.classList.remove('scrolled');
+  });
+
+  renderDocsTab(0);
+});
+
+// ===== TICKERS =====
+function formatNum(n) {
+  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+  return n.toLocaleString();
+}
+
+function startTickers() {
+  setInterval(() => {
+    reqCounter += Math.floor(Math.random()*1000);
+    blockedCounter += Math.floor(Math.random()*100);
+    bandwidth = 31.4 + (Math.random()-0.5)*0.2;
+    document.getElementById('req-counter').textContent = formatNum(reqCounter)+' req/s';
+    document.getElementById('blocked-counter').textContent = formatNum(blockedCounter);
+    document.getElementById('bandwidth-counter').textContent = bandwidth.toFixed(1)+' Tbps';
+    const infraBw = document.getElementById('infra-bw');
+    if (infraBw) infraBw.textContent = bandwidth.toFixed(1);
+  }, 100);
+}
+
+function startClock() {
+  function update() {
+    const el = document.getElementById('utc-time');
+    if (el) el.textContent = new Date().toISOString().split('T')[1].split('.')[0]+' UTC';
+  }
+  update();
+  setInterval(update, 1000);
+}
+
+// ===== UPTIME BARS =====
+function buildUptimeBars() {
+  const container = document.getElementById('uptime-bars');
+  for (let i = 89; i >= 0; i--) {
+    const bar = document.createElement('div');
+    bar.className = 'uptime-bar operational';
+    const d = new Date();
+    d.setDate(d.getDate()-i);
+    bar.title = d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+': OPERATIONAL';
+    container.appendChild(bar);
+  }
+}
+
+// ===== EDGE GRID =====
+function buildEdgeGrid() {
+  const grid = document.getElementById('edge-grid');
+  grid.innerHTML = EDGE_NODES.map(node => {
+    const dotClass = node.status==='ONLINE' ? 'dot-green' : node.status==='DEGRADED' ? 'dot-orange' : 'dot-red';
+    return `<div class="edge-node">
+      <div class="edge-node-header">
+        <span class="edge-id">${node.id}</span>
+        <div class="dot-wrap dot-sm ${dotClass}"><div class="dot-ping"></div><div class="dot-core"></div></div>
+      </div>
+      <div class="edge-location" title="${node.location}">${node.location}</div>
+      <div class="edge-stats"><span>${node.latency}ms</span><span>${node.load}% load</span></div>
+    </div>`;
+  }).join('');
+}
+
+// ===== DOMAIN TABLE =====
+function buildDomainTable() {
+  const tbody = document.getElementById('domain-table-body');
+  tbody.innerHTML = adminSubdomains.map((bid, i) => {
+    const isAvail = bid.status === 'AVAILABLE';
+    const tags = bid.features.slice(0,2).map(f => `<span class="domain-tag">${f}</span>`).join('');
+    let action = '';
+    if (bid.status==='AVAILABLE') {
+      action = `<div class="action-wrap">
+        <div class="status-pill pill-open">
+          <div class="pip"></div><span>OPEN</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="font-size:9px;" onclick="openDomainModal(${i})">Apply Now</button>
+      </div>`;
+    } else if (bid.status==='UNDER_REVIEW') {
+      action = `<div class="pill-review"><div class="pip"></div><span>Under Review</span></div>`;
+    } else if (bid.status==='SOLD') {
+      action = `<span class="pill-sold">SOLD</span>`;
+    } else if (bid.status==='BANNED') {
+      action = `<span class="pill-banned">BANNED</span>`;
+    } else if (bid.status==='REQUEST_ACCESS') {
+      action = `<span class="pill-generic">Request Access</span>`;
+    } else if (bid.status==='CONTACT_SALES') {
+      action = `<span class="pill-generic">Contact Sales</span>`;
+    } else {
+      action = `<span style="color:rgba(255,255,255,0.2);font-size:12px;">${bid.statusText}</span>`;
+    }
+    return `<tr class="${isAvail?'available':'unavailable'}" onclick="${isAvail?`openDomainModal(${i})`:''}">
+      <td>
+        <div class="domain-cell">
+          <div class="domain-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+          </div>
+          <div>
+            <div class="domain-name">${bid.subdomain}</div>
+            <div class="domain-tags">${tags}</div>
+          </div>
+        </div>
+      </td>
+      <td><div class="domain-price">36 <span>AED</span></div></td>
+      <td><div class="domain-status">${bid.statusText}</div></td>
+      <td><div class="domain-cluster">${bid.nodeCluster}</div></td>
+      <td style="text-align:right;">${action}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ===== THREAT MONITOR =====
+let logEntries = [];
+function generateLog() {
+  const now = new Date();
+  const ts = [now.getHours(),now.getMinutes(),now.getSeconds()].map(n=>String(n).padStart(2,'0')).join(':')
+    +'.'+String(now.getMilliseconds()).padStart(3,'0');
+  return {
+    id: Math.random().toString(36).substr(2,8),
+    ts, type: LOG_TYPES[Math.floor(Math.random()*LOG_TYPES.length)],
+    source: ASN_SOURCES[Math.floor(Math.random()*ASN_SOURCES.length)],
+    vector: ATTACK_VECTORS[Math.floor(Math.random()*ATTACK_VECTORS.length)],
+    packets: (Math.random()*50+10).toFixed(1)+'M pps',
+    severity: SEVERITIES[Math.floor(Math.random()*SEVERITIES.length)],
+    region: REGIONS[Math.floor(Math.random()*REGIONS.length)],
+  };
+}
+
+function renderLogs() {
+  const container = document.getElementById('log-entries');
+  if (!container) return;
+  container.innerHTML = logEntries.map(log => {
+    const sevClass = `sev-${log.severity}`;
+    return `<div class="log-entry">
+      <div class="log-ts">${log.ts}</div>
+      <div class="log-type-${log.type}">${log.type}</div>
+      <div class="log-vector">${log.vector}</div>
+      <div class="log-source">${log.source}</div>
+      <div class="log-region">${log.region}</div>
+      <div><span class="sev-badge ${sevClass}">${log.severity}</span></div>
+      <div class="log-packets">${log.packets}</div>
+    </div>`;
+  }).join('');
+}
+
+function startThreatMonitor() {
+  logEntries = Array.from({length:8}, generateLog);
+  renderLogs();
+  setInterval(() => {
+    logEntries = [generateLog(), ...logEntries.slice(0,7)];
+    renderLogs();
+  }, 1500);
+}
+
+// ===== DOCS TABS =====
+function setDocsTab(idx, btn) {
+  document.querySelectorAll('.docs-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderDocsTab(idx);
+}
+
+function renderDocsTab(idx) {
+  const content = document.getElementById('docs-content');
+  if (!content) return;
+  content.innerHTML = DOCS_DATA[idx].map(item => `
+    <div class="docs-item">
+      <div>
+        <div class="docs-item-key"><span class="k">${item.k}</span><span class="eq">=</span><span class="v">${item.v}</span></div>
+        <div class="docs-item-desc">${item.d}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ===== MODALS =====
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+function closeModalOnBackdrop(e, id) {
+  if (e.target.id === id) closeModal(id);
+}
+
+// ===== DOMAIN MODAL =====
+function openDomainModal(idx) {
+  selectedSubdomain = adminSubdomains[idx];
+  document.getElementById('domain-modal-name').textContent = selectedSubdomain.subdomain;
+  document.getElementById('domain-modal-tags').innerHTML = selectedSubdomain.features.map(f => `<span class="domain-tag">${f}</span>`).join('');
+  openModal('domain-modal');
+}
+
+function openCheckout() {
+  if (selectedSubdomain) {
+    document.getElementById('checkout-domain-name').textContent = selectedSubdomain.subdomain;
+    document.getElementById('success-domain-name').textContent = selectedSubdomain.subdomain;
+  }
+  closeModal('domain-modal');
+  closeModal('custom-modal');
+  document.getElementById('checkout-form-view').style.display = 'block';
+  document.getElementById('checkout-success-view').style.display = 'none';
+  openModal('checkout-modal');
+}
+
+function completeCheckout() {
+  const name = document.getElementById('buyer-name').value;
+  const email = document.getElementById('buyer-email').value;
+  const phone = document.getElementById('buyer-phone').value;
+  if (selectedSubdomain) {
+    const idx = adminSubdomains.findIndex(d => d.subdomain === selectedSubdomain.subdomain);
+    if (idx >= 0) {
+      adminSubdomains[idx].status = 'UNDER_REVIEW';
+      adminSubdomains[idx].statusText = 'Under Review';
+      adminSubdomains[idx].reviewedBy = { name, email, phone };
+      buildDomainTable();
+      renderAdminDomains();
+    }
+    window.open('https://nowpayments.io/payment/?iid=4400626305','_blank');
+  }
+  document.getElementById('checkout-form-view').style.display = 'none';
+  document.getElementById('checkout-success-view').style.display = 'flex';
+}
+
+function closeCheckoutFull() {
+  closeModal('checkout-modal');
+  selectedSubdomain = null;
+}
+
+// ===== CUSTOM MODAL =====
+function proceedCustom() {
+  const val = document.getElementById('custom-subdomain-input').value.trim();
+  if (!val) return;
+  const subdomain = val.includes('.') ? val : val+'.sarayu.ae';
+  selectedSubdomain = { subdomain, price:36, statusText:'Custom', nodeCluster:'AE-DXB-NEW', status:'AVAILABLE', features:['Custom Subdomain'] };
+  document.getElementById('checkout-domain-name').textContent = subdomain;
+  document.getElementById('success-domain-name').textContent = subdomain;
+  document.getElementById('checkout-form-view').style.display = 'block';
+  document.getElementById('checkout-success-view').style.display = 'none';
+  closeModal('custom-modal');
+  openModal('checkout-modal');
+}
+
+// ===== ADMIN =====
+function handleAdminClick() {
+  if (isAdminLoggedIn) {
+    toggleAdmin();
+  } else {
+    document.getElementById('login-username').value = '';
+    document.getElementById('login-password').value = '';
+    document.getElementById('login-error').style.display = 'none';
+    openModal('login-modal');
+  }
+}
+
+function doLogin() {
+  const u = document.getElementById('login-username').value;
+  const p = document.getElementById('login-password').value;
+  if (u === 'Admin@123' && p === 'Aa@0558762021') {
+    isAdminLoggedIn = true;
+    closeModal('login-modal');
+    showAdmin();
+  } else {
+    const err = document.getElementById('login-error');
+    err.textContent = 'Invalid credentials';
+    err.style.display = 'block';
+  }
+}
+
+function showAdmin() {
+  document.getElementById('site').style.display = 'none';
+  document.getElementById('admin-view').classList.add('visible');
+  renderAdminDomains();
+}
+
+function goHome() {
+  document.getElementById('admin-view').classList.remove('visible');
+  document.getElementById('site').style.display = 'block';
+}
+
+function adminLogout() {
+  isAdminLoggedIn = false;
+  goHome();
+}
+
+function toggleAdmin() {
+  const av = document.getElementById('admin-view');
+  if (av.classList.contains('visible')) goHome();
+  else showAdmin();
+}
+
+function renderAdminDomains() {
+  const list = document.getElementById('admin-domain-list');
+  list.innerHTML = adminSubdomains.map((d, i) => {
+    let reviewBox = '';
+    if (d.status === 'UNDER_REVIEW' && d.reviewedBy) {
+      reviewBox = `<div class="admin-review-box">
+        <div class="admin-review-label">Under SRE Review</div>
+        <div class="admin-review-name">${d.reviewedBy.name}</div>
+        <div class="admin-review-contact">${d.reviewedBy.email}</div>
+        <div class="admin-review-contact">${d.reviewedBy.phone}</div>
+      </div>`;
+    }
+    return `<div class="admin-domain-row">
+      <div style="flex:1;">
+        <div class="admin-domain-name">${d.subdomain}</div>
+        <div class="admin-domain-status">${d.statusText}</div>
+        ${reviewBox}
+      </div>
+      <select class="admin-select" onchange="adminUpdateStatus(${i}, this.value)">
+        <option value="AVAILABLE" ${d.status==='AVAILABLE'?'selected':''}>AVAILABLE</option>
+        <option value="UNDER_REVIEW" ${d.status==='UNDER_REVIEW'?'selected':''}>UNDER REVIEW</option>
+        <option value="SOLD" ${d.status==='SOLD'?'selected':''}>SOLD</option>
+        <option value="REQUEST_ACCESS" ${d.status==='REQUEST_ACCESS'?'selected':''}>REQUEST ACCESS</option>
+        <option value="CONTACT_SALES" ${d.status==='CONTACT_SALES'?'selected':''}>CONTACT SALES</option>
+        <option value="BANNED" ${d.status==='BANNED'?'selected':''}>BANNED</option>
+        <option value="PENDING" ${d.status==='PENDING'?'selected':''}>PENDING</option>
+      </select>
+    </div>`;
+  }).join('');
+}
+
+function adminUpdateStatus(idx, newStatus) {
+  adminSubdomains[idx].status = newStatus;
+  const statusMap = {SOLD:'Sold Out',BANNED:'Suspended',AVAILABLE:'Available',UNDER_REVIEW:'Under Review',PENDING:'Pending'};
+  if (statusMap[newStatus]) adminSubdomains[idx].statusText = statusMap[newStatus];
+  buildDomainTable();
+}
+
+function adminAddDomain() {
+  const name = document.getElementById('new-domain-input').value.trim();
+  if (!name) return;
+  adminSubdomains.push({
+    subdomain: name.includes('.')?name:`${name}.sarayu.ae`,
+    price:36, statusText:'Available', nodeCluster:'AE-DXB-01',
+    status:'AVAILABLE', features:['Wildcard SSL','Cloudflare Optimization']
+  });
+  document.getElementById('new-domain-input').value = '';
+  renderAdminDomains();
+  buildDomainTable();
+}
+</script>
+</body>
+</html>
