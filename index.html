@@ -1336,16 +1336,16 @@
 </div>
 
 <script>
-// ===== DATA =====
-const DOMAIN_INVENTORY = [
-  { subdomain:"dev.sarayu.ae", price:36, statusText:"Available", nodeCluster:"AE-DXB-01", status:"AVAILABLE", features:["Wildcard SSL","10GB Bandwidth","Priority Support"] },
-  { subdomain:"api.sarayu.ae", price:36, statusText:"Available", nodeCluster:"AE-DXB-01", status:"AVAILABLE", features:["Dedicated IP","100GB Bandwidth","24/7 Support"] },
-  { subdomain:"lab.sarayu.ae", price:36, statusText:"Available", nodeCluster:"AE-DXB-02", status:"AVAILABLE", features:["SSL","5GB Bandwidth","Email Support"] },
-  { subdomain:"stage.sarayu.ae", price:36, statusText:"Available", nodeCluster:"AE-DXB-02", status:"AVAILABLE", features:["SSL","5GB Bandwidth","Email Support"] },
-  { subdomain:"prod.sarayu.ae", price:36, statusText:"Waiting for SRE Approval", nodeCluster:"AE-DXB-ENT", status:"PENDING", features:["Enterprise","Unlimited","Dedicated SRE"] },
-  { subdomain:"cdn.sarayu.ae", price:36, statusText:"Available", nodeCluster:"AE-DXB-01", status:"AVAILABLE", features:["Cloudflare Spectrum","50GB Bandwidth","Priority Support"] },
-];
+// ===== CLOUDFLARE SYNC CONFIG =====
+const API_URL = "/api"; 
+let adminSubdomains = []; // This will now come from your Database (D1)
+let isAdminLoggedIn = false;
+let selectedSubdomain = null;
+let reqCounter = 847293847;
+let blockedCounter = 12847293;
+let bandwidth = 31.4;
 
+// THEME DATA (Visuals only)
 const EDGE_NODES = [
   { id:"dxb-01", location:"Dubai, UAE", status:"ONLINE", latency:2.1, load:67 },
   { id:"auh-01", location:"Abu Dhabi, UAE", status:"ONLINE", latency:3.4, load:52 },
@@ -1354,13 +1354,11 @@ const EDGE_NODES = [
   { id:"lax-01", location:"Los Angeles, US", status:"DEGRADED", latency:156.3, load:92 },
   { id:"lon-01", location:"London, UK", status:"ONLINE", latency:52.8, load:71 },
 ];
-
 const ATTACK_VECTORS = ["SYN Flood","UDP Amplification","HTTP/2 Rapid Reset","DNS Query Flood","ICMP Flood","Slowloris","NTP Amplification","Memcached Reflection","SSDP Amplification","LDAP Reflection","Aisuru Botnet","TCP RST Attack","IP Fragmentation","Ping of Death","ACK Flood"];
 const ASN_SOURCES = ["AS174 Cogent","AS7018 AT&T","AS3356 Level3","AS1299 Telia","AS6939 Hurricane","AS2914 NTT","AS3257 GTT","AS6461 Zayo","AS9002 RETN","AS1239 Sprint","AS3491 PCCW","AS4134 Chinanet"];
 const REGIONS = ["EU-WEST","EU-NORTH","US-EAST","US-WEST","APAC-SOUTH","APAC-NORTH","ME-CENTRAL","AF-SOUTH","SA-EAST","OCE-WEST"];
 const LOG_TYPES = ["BLOCKED","MITIGATED","ANALYZED","QUARANTINED"];
 const SEVERITIES = ["LOW","MEDIUM","HIGH","CRITICAL"];
-
 const DOCS_DATA = [
   [{k:"kernel.kptr_restrict",v:"2",d:"Hide kernel pointers from all users"},{k:"kernel.dmesg_restrict",v:"1",d:"Restrict dmesg to CAP_SYSLOG"},{k:"kernel.perf_event_paranoid",v:"3",d:"Disable perf events"}],
   [{k:"net.ipv4.tcp_syncookies",v:"1",d:"Enable SYN flood protection"},{k:"net.ipv4.tcp_max_syn_backlog",v:"65535",d:"Max SYN queue length"}],
@@ -1368,28 +1366,35 @@ const DOCS_DATA = [
   [{k:"fs.protected_hardlinks",v:"1",d:"Hardlink protection"},{k:"fs.protected_symlinks",v:"1",d:"Symlink protection"}],
 ];
 
-// ===== STATE =====
-let adminSubdomains = [...DOMAIN_INVENTORY.map(d => ({...d}))];
-let isAdminLoggedIn = false;
-let selectedSubdomain = null;
-let reqCounter = 847293847;
-let blockedCounter = 12847293;
-let bandwidth = 31.4;
+// SYNC FUNCTION: Fetches data from Cloudflare
+async function syncFromCloud() {
+  try {
+    const response = await fetch(`${API_URL}?action=getDomains`);
+    adminSubdomains = await response.json();
+    buildDomainTable(); 
+    if (isAdminLoggedIn) renderAdminDomains();
+  } catch (e) {
+    console.error("Sync failed", e);
+  }
+}
 
 // ===== INIT =====
 window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     const loader = document.getElementById('loader');
-    loader.classList.add('fade-out');
+    if(loader) loader.classList.add('fade-out');
     setTimeout(() => {
-      loader.style.display = 'none';
+      if(loader) loader.style.display = 'none';
       document.getElementById('site').style.display = 'block';
     }, 800);
   }, 1200);
 
+  // START DATABASE SYNC
+  syncFromCloud();
+  setInterval(syncFromCloud, 20000); // Check for updates every 20 seconds
+
   buildUptimeBars();
   buildEdgeGrid();
-  buildDomainTable();
   startTickers();
   startThreatMonitor();
   startClock();
